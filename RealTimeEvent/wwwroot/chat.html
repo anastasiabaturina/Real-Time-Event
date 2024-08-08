@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.18/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #chat {
+            width: 400px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        #messageInput {
+            width: 75%;
+            padding: 5px;
+        }
+
+        #sendButton {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Application</h1>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+        <button id="sendButton" disabled>Send</button>
+    </div>
+
+    <script>
+        async function connectToChat() {
+            const token = localStorage.getItem('jwtToken');
+            const username = localStorage.getItem('username');
+
+            if (!token || !username) {
+                alert('Not authenticated. Please register or log in first.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chat", {
+                    accessTokenFactory: () => token
+                })
+                .build();
+
+            connection.on("Receive", (message, userName) => {
+                const userNameElem = document.createElement("b");
+                userNameElem.textContent = `${userName}: `;
+
+                const elem = document.createElement("p");
+                elem.appendChild(userNameElem);
+                elem.appendChild(document.createTextNode(message));
+
+                document.getElementById('messages').appendChild(elem);
+                scrollToBottom();
+            });
+
+            connection.on("Notify", (notification) => {
+                const msg = document.createElement('div');
+                msg.textContent = notification;
+                document.getElementById('messages').appendChild(msg);
+                scrollToBottom();
+            });
+
+            try {
+                await connection.start();
+                console.log('Connection established.');
+
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendButton').disabled = false;
+
+                document.getElementById('sendButton').addEventListener('click', async () => {
+                    const messageInput = document.getElementById('messageInput');
+                    const message = messageInput.value.trim();
+
+                    if (message) {
+                        await connection.invoke("SendMessage", message);
+                        messageInput.value = '';
+                    }
+                });
+            } catch (err) {
+                console.error('Connection error: ', err);
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        connectToChat();
+    </script>
+</body>
+</html>
