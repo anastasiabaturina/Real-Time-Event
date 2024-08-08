@@ -399,3 +399,4 @@ FodyWeavers.xsd
 
 appsettings.json
 /RealTimeEvent/appsettings.json
+/RealTimeEvent/.env
