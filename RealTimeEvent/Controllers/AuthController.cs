@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using RealTimeEvent.Filters;
 using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models.DTOs;
-using RealTimeEvent.Models.Request;
+using RealTimeEvent.Models.Requests;
+using RealTimeEvent.Models.Responses;
 
 namespace RealTimeEvent.Controllers;
 
@@ -16,6 +19,7 @@ public class AuthController : ControllerBase
         _userService = userService;
     }
 
+    [ValidatorFilter]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterUserRequest registerUserRequest, CancellationToken cancellationToken)
     {
@@ -25,11 +29,17 @@ public class AuthController : ControllerBase
             Password = registerUserRequest.Password,
         };
 
-        var response = await _userService.RegisterAsync(userDto, cancellationToken);
+        var result = await _userService.RegisterAsync(userDto, cancellationToken);
 
-        return Ok(response);
+        var reposnse = new Response<AuthResponse>
+        {
+            Data = result,
+        };
+
+        return Ok(reposnse);
     }
 
+    [ValidatorFilter]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest loginRequest, CancellationToken cancellationToken)
     {
@@ -39,7 +49,31 @@ public class AuthController : ControllerBase
             Password = loginRequest.Password,
         };
 
-        var response = await _userService.LoginAsync(userDto, cancellationToken);
+        var result = await _userService.LoginAsync(userDto, cancellationToken);
+
+        var response = new Response<AuthResponse>
+        {
+            Data = result,
+        };
+
+        return Ok(response);
+    }
+
+    [Authorize]
+    [HttpGet("messages")]
+    public async Task<IActionResult> GetMessage([FromQuery] DateTime? lastmessage, CancellationToken cancellationToken)
+    {
+        var getMesssgeDto = new GetMessageDto
+        {
+            LastMessage = lastmessage,
+        };
+
+        var result = await _userService.GetMessageAsync(getMesssgeDto, cancellationToken);
+
+        var response = new Response<GetMessageResponse>
+        {
+            Data = result
+        };
 
         return Ok(response);
     }

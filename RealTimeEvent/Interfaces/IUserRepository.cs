@@ -9,4 +9,6 @@ public interface IUserRepository
     Task SaveMesageAsync(Message message);
 
     Task<User> FindUserNameAsync(string name, CancellationToken cancellationToken);
+
+    Task<List<Message>> GetMessageAsync(DateTime? lastMessage, CancellationToken cancellationToken);
 }

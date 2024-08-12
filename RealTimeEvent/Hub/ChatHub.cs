@@ -24,7 +24,8 @@ public class ChatHub : Hub
         var saveMessageDto = new MessageDto
         {
             Text = message,
-            UserId = Guid.Parse(Context.User.FindFirstValue(ClaimTypes.NameIdentifier))
+            UserId = Guid.Parse(Context.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            UserName = userName,
         };
 
         await _userService.SaveMessageAsync(saveMessageDto);

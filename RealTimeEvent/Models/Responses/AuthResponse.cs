@@ -1,4 +1,4 @@
-﻿namespace RealTimeEvent.Models.Response;
+﻿namespace RealTimeEvent.Models.Responses;
 
 public class AuthResponse
 {

@@ -12,7 +12,7 @@ using RealTimeEvent.Models;
 namespace RealTimeEvent.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20240806073130_AddTableMassegeUser")]
+    [Migration("20240808090608_AddTableMassegeUser")]
     partial class AddTableMassegeUser
     {
         /// <inheritdoc />
@@ -41,6 +41,9 @@ namespace RealTimeEvent.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

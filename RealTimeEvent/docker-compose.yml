@@ -4,9 +4,9 @@ services:
   postgres:
     image: postgres:16.1
     environment:
-      POSTGRES_DB: Users
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ${DATABASE}
+      POSTGRES_USER: ${USERNAME}
+      POSTGRES_PASSWORD: ${PASSWORD}
     ports:
       - "4444:5432"
     volumes:

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RealTimeEvent.Configuration;
 using RealTimeEvent.Interfaces;
+using RealTimeEvent.Middlewaries;
 using RealTimeEvent.Models;
 using RealTimeEvent.Repositories;
 using RealTimeEvent.Services;
@@ -65,6 +66,8 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseMiddleware<ExceptionHandingMiddleware>();
 
 app.UseEndpoints(endpoints =>
 {

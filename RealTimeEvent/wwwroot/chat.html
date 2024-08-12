@@ -9,13 +9,17 @@
             font-family: Arial, sans-serif;
         }
 
+        #chatTitle {
+            text-align: center;
+        }
+
         #chat {
             width: 400px;
             margin: 0 auto;
             border: 1px solid #ccc;
             padding: 10px;
             border-radius: 5px;
-            background-color: #f9f9f9;
+            background-color: #c7edcff8;
         }
 
         #messages {
@@ -25,7 +29,7 @@
             border: 1px solid #ddd;
             padding: 5px;
             border-radius: 5px;
-            background-color: #fff;
+            background-color: #ffffff;
         }
 
         #messageInput {
@@ -39,7 +43,7 @@
     </style>
 </head>
 <body>
-    <h1>Chat Application</h1>
+    <h1 id="chatTitle">Chat</h1>
     <div id="chat">
         <div id="messages"></div>
         <input type="text" id="messageInput" placeholder="Type a message..." disabled>
@@ -47,6 +51,9 @@
     </div>
 
     <script>
+        var lastMessage = null;
+        let isFetching = false;
+
         async function connectToChat() {
             const token = localStorage.getItem('jwtToken');
             const username = localStorage.getItem('username');
@@ -64,22 +71,11 @@
                 .build();
 
             connection.on("Receive", (message, userName) => {
-                const userNameElem = document.createElement("b");
-                userNameElem.textContent = `${userName}: `;
-
-                const elem = document.createElement("p");
-                elem.appendChild(userNameElem);
-                elem.appendChild(document.createTextNode(message));
-
-                document.getElementById('messages').appendChild(elem);
-                scrollToBottom();
+                addMessage(userName, message);
             });
 
             connection.on("Notify", (notification) => {
-                const msg = document.createElement('div');
-                msg.textContent = notification;
-                document.getElementById('messages').appendChild(msg);
-                scrollToBottom();
+                addNotification(notification);
             });
 
             try {
@@ -88,6 +84,8 @@
 
                 document.getElementById('messageInput').disabled = false;
                 document.getElementById('sendButton').disabled = false;
+
+                await fetchMessages();
 
                 document.getElementById('sendButton').addEventListener('click', async () => {
                     const messageInput = document.getElementById('messageInput');
@@ -98,14 +96,103 @@
                         messageInput.value = '';
                     }
                 });
+
+                document.getElementById('messageInput').addEventListener('keypress', async (event) => {
+                    if (event.key === 'Enter') {
+                        const messageInput = document.getElementById('messageInput');
+                        const message = messageInput.value.trim();
+
+                        if (message) {
+                            await connection.invoke("SendMessage", message);
+                            messageInput.value = '';
+                        }
+                    }
+                });
+
+                
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.addEventListener('scroll', async () => {
+                    if (messagesDiv.scrollTop === 0 && !isFetching) {
+                        await fetchMessages();
+                    }
+                });
             } catch (err) {
                 console.error('Connection error: ', err);
             }
         }
 
+        function addMessage(userName, message) {
+            const userNameElem = document.createElement("b");
+            userNameElem.textContent = `${userName}: `;
+
+            const elem = document.createElement("p");
+            elem.appendChild(userNameElem);
+            elem.appendChild(document.createTextNode(message));
+
+            document.getElementById('messages').appendChild(elem);
+            scrollToBottom();
+        }
+
+        function addNotification(notification) {
+            const msg = document.createElement('div');
+            msg.textContent = notification;
+            document.getElementById('messages').appendChild(msg);
+            scrollToBottom();
+        }
+
         function scrollToBottom() {
             const messagesDiv = document.getElementById('messages');
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function fetchMessages() {
+            isFetching = true;
+            const token = localStorage.getItem('jwtToken');
+            var url = lastMessage
+                ? `http://localhost:5126/api/v1/Auth/messages?lastmessage=${lastMessage}`
+                : `http://localhost:5126/api/v1/Auth/messages`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const responseData = await response.json(); 
+                console.log(responseData); 
+                const messages = responseData.data.result; 
+                const messageLast = responseData.data.lastMessage;
+                console.log(messageLast);
+
+                const messagesDiv = document.getElementById('messages');
+
+                messages.forEach(msg => {
+                    const userName = msg.userName; 
+                    const message = msg.text; 
+                    const time = msg.timeSending; 
+
+                    const userNameElem = document.createElement("b");
+                    userNameElem.textContent = `${new Date(time).toLocaleString()} ${userName}: `;
+
+                    const elem = document.createElement("p");
+                    elem.appendChild(userNameElem);
+                    elem.appendChild(document.createTextNode(message));
+
+                    messagesDiv.insertBefore(elem, messagesDiv.firstChild);
+
+                });
+
+                lastMessage = messageLast;
+                console.log(lastMessage);
+
+            } else {
+                console.error('Failed to fetch messages:', await response.json());
+            }
+
+            isFetching = false; 
         }
 
         connectToChat();

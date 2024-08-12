@@ -31,4 +31,21 @@ public class UserRepository : IUserRepository
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<Message>> GetMessageAsync(DateTime? lastIdMesssge, CancellationToken cancellationToken)
+    {
+        if (lastIdMesssge != null)
+        {
+            return await _context.Messages                            
+                .Where(u => u.TimeSending < lastIdMesssge)
+                .OrderByDescending(u => u.TimeSending)
+                .Take(10)
+                .ToListAsync(cancellationToken);
+        }
+        
+        return await  _context.Messages
+            .OrderByDescending(u => u.TimeSending)
+            .Take(10)
+            .ToListAsync(cancellationToken);
+    }
 }
