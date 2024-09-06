@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using RealTimeEvent.Extension;
 using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models.DTOs;
 using System.Security.Claims;
@@ -18,14 +19,14 @@ public class ChatHub : Hub
 
     public async Task SendMessage(string message)
     {
-        var userName = Context.User.FindFirstValue(ClaimTypes.Name);
+        var userName = Context.GetUserName;
         await Clients.All.SendAsync("Receive", message, userName);
 
         var saveMessageDto = new MessageDto
         {
             Text = message,
             UserId = Guid.Parse(Context.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-            UserName = userName,
+            UserName = userName.ToString(),
         };
 
         await _userService.SaveMessageAsync(saveMessageDto);
