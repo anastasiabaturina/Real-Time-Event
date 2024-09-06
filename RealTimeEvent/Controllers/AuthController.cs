@@ -61,11 +61,11 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("messages")]
-    public async Task<IActionResult> GetMessage([FromQuery] DateTime? lastmessage, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetMessage([FromQuery] DateTime? lastMessage, CancellationToken cancellationToken)
     {
         var getMesssgeDto = new GetMessageDto
         {
-            LastMessage = lastmessage,
+            LastMessage = lastMessage,
         };
 
         var result = await _userService.GetMessageAsync(getMesssgeDto, cancellationToken);
