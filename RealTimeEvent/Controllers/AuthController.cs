@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RealTimeEvent.Filters;
 using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models.DTOs;
 using RealTimeEvent.Models.Requests;
@@ -9,7 +8,7 @@ using RealTimeEvent.Models.Responses;
 namespace RealTimeEvent.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v1/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -19,7 +18,6 @@ public class AuthController : ControllerBase
         _userService = userService;
     }
 
-    [ValidatorFilter]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterUserRequest registerUserRequest, CancellationToken cancellationToken)
     {
@@ -39,7 +37,6 @@ public class AuthController : ControllerBase
         return Ok(reposnse);
     }
 
-    [ValidatorFilter]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest loginRequest, CancellationToken cancellationToken)
     {
