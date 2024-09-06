@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 namespace SignalRApp;
 
+[Authorize]
 public class ChatHub : Hub
 {
     private readonly IUserService _userService;
@@ -15,7 +16,6 @@ public class ChatHub : Hub
         _userService = userService; 
     }
 
-    [Authorize]
     public async Task SendMessage(string message)
     {
         var userName = Context.User.FindFirstValue(ClaimTypes.Name);
@@ -31,14 +31,12 @@ public class ChatHub : Hub
         await _userService.SaveMessageAsync(saveMessageDto);
     }
 
-    [Authorize]
     public override async Task OnConnectedAsync()
     {
         await Clients.All.SendAsync("Notify", $"{Context.User.FindFirstValue(ClaimTypes.Name)} logged into the chat");
         await base.OnConnectedAsync();
     }
 
-    [Authorize]
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         await Clients.All.SendAsync("Notify", $"{Context.User.FindFirstValue(ClaimTypes.Name)} left the chat");
