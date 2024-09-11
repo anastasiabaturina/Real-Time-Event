@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+    <style>
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <span id="usernameError" class="error"></span><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <span id="passwordError" class="error"></span><br>
+        <button type="button" id="loginButton">Login</button>
+        <button type="button" id="registerButton">Register</button>
+    </form>
+    <div id="message"></div>
+    <div id="serverErrors" class="error"></div>
+
+    <script>
+        document.getElementById('loginButton').addEventListener('click', async function () {
+            if (validateForm()) {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    const response = await fetch('http://localhost:5126/api/v1/Auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ UserName: username, Password: password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        await handleAuthenticationSuccess(data, username);
+                    } else {
+                        displayServerErrors(data);
+                    }
+                } catch (err) {
+                    console.error('Login failed', err);
+                }
+            }
+        });
+
+        document.getElementById('registerButton').addEventListener('click', async function () {
+            if (validateForm()) {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    const response = await fetch('http://localhost:5126/api/v1/Auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ UserName: username, Password: password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        await handleAuthenticationSuccess(data, username);
+                    } else {
+                        displayServerErrors(data);
+                    }
+                } catch (err) {
+                    console.error('Registration failed', err);
+                }
+            }
+        });
+
+        async function handleAuthenticationSuccess(data, username) {
+            document.getElementById('message').innerText = 'Authentication successful. Redirecting to chat page...';
+            await saveToLocalStorage('jwtToken', data.data.token);
+            await saveToLocalStorage('username', username);
+
+            setTimeout(() => {
+                window.location.href = 'chat.html';
+            }, 2000);
+        }
+
+        async function saveToLocalStorage(key, value) {
+            return new Promise((resolve) => {
+                localStorage.setItem(key, value);
+                resolve();
+            });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const usernameError = document.getElementById('usernameError');
+            const passwordError = document.getElementById('passwordError');
+            const serverErrors = document.getElementById('serverErrors');
+
+            usernameError.textContent = '';
+            passwordError.textContent = '';
+            serverErrors.textContent = '';
+
+            if (username.length < 3 || username.length > 20) {
+                usernameError.textContent = 'Username must be between 3 and 20 characters long.';
+                isValid = false;
+            }
+
+            if (password.length < 6) {
+                passwordError.textContent = 'Password must be at least 6 characters long.';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function displayServerErrors(data) {
+            const serverErrors = document.getElementById('serverErrors');
+            serverErrors.textContent = '';
+
+            if (data.errors) {
+                for (const key in data.errors) {
+                    if (data.errors.hasOwnProperty(key)) {
+                        const errorMessage = data.errors[key].join(' ');
+                        serverErrors.innerText += `${key}: ${errorMessage}\n`;
+                    }
+                }
+            } else {
+                serverErrors.innerText = data.error.message;
+            }
+        }
+    </script>
+</body>
+</html>

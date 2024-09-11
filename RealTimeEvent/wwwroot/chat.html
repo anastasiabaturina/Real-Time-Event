@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.18/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #chatTitle {
+            text-align: center;
+        }
+
+        #chat {
+            width: 400px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #c7edcff8;
+        }
+
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #ffffff;
+        }
+
+        #messageInput {
+            width: 75%;
+            padding: 5px;
+        }
+
+        #sendButton {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="chatTitle">Chat</h1>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+        <button id="sendButton" disabled>Send</button>
+    </div>
+
+    <script>
+        var lastMessage = null;
+        let isFetching = false;
+
+        async function connectToChat() {
+            const token = localStorage.getItem('jwtToken');
+            const username = localStorage.getItem('username');
+
+            if (!token || !username) {
+                alert('Not authenticated. Please register or log in first.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chat", {
+                    accessTokenFactory: () => token
+                })
+                .build();
+
+            connection.on("ReceiveMessage", (userName, message) => {
+                addMessage(userName, message);
+            });;
+
+            connection.on("Notify", (notification) => {
+                addNotification(notification);
+            });
+
+            try {
+                await connection.start();
+                console.log('Connection established.');
+
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('sendButton').disabled = false;
+
+                await fetchMessages();
+
+                document.getElementById('sendButton').addEventListener('click', async () => {
+                    const messageInput = document.getElementById('messageInput');
+                    const message = messageInput.value.trim();
+
+                    if (message) {
+                        await sendMessage(message);
+                        messageInput.value = '';
+                    }
+                });
+
+                document.getElementById('messageInput').addEventListener('keypress', async (event) => {
+                    if (event.key === 'Enter') {
+                        const messageInput = document.getElementById('messageInput');
+                        const message = messageInput.value.trim();
+
+                        if (message) {
+                            await sendMessage(message);
+                            messageInput.value = '';
+                        }
+                    }
+                });
+              
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.addEventListener('scroll', async () => {
+                    if (messagesDiv.scrollTop === 0 && !isFetching) {
+                        await fetchMessages();
+                    }
+                });
+            } catch (err) {
+                console.error('Connection error: ', err);
+            }
+        }
+
+        async function sendMessage(message) {
+            const token = localStorage.getItem('jwtToken');
+
+            const response = await fetch('http://localhost:5126/api/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                console.log('Message sent successfully.');
+            } else {
+                console.error('Failed to send message:', await response.json());
+            }
+        }
+
+        function addMessage(userName, message) {
+            const userNameElem = document.createElement("b");
+            userNameElem.textContent = `${userName}: `;
+
+            const elem = document.createElement("p");
+            elem.appendChild(userNameElem);
+            elem.appendChild(document.createTextNode(message));
+
+            document.getElementById('messages').appendChild(elem);
+            scrollToBottom();
+        }
+
+        function addNotification(notification) {
+            const msg = document.createElement('div');
+            msg.textContent = notification;
+            document.getElementById('messages').appendChild(msg);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function fetchMessages() {
+            isFetching = true;
+            const token = localStorage.getItem('jwtToken');
+            var url = lastMessage
+                ? `http://localhost:5126/api/v1/messages/?lastMessage=${lastMessage}`
+                : `http://localhost:5126/api/v1/messages`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const responseData = await response.json(); 
+                console.log(responseData); 
+                const messages = responseData.data.result; 
+                const messageLast = responseData.data.lastMessage;
+                console.log(messageLast);
+
+                const messagesDiv = document.getElementById('messages');
+
+                messages.forEach(msg => {
+                    const userName = msg.userName; 
+                    const message = msg.text; 
+                    const time = msg.timeSending; 
+
+                    const userNameElem = document.createElement("b");
+                    userNameElem.textContent = `${new Date(time).toLocaleString()} ${userName}: `;
+
+                    const elem = document.createElement("p");
+                    elem.appendChild(userNameElem);
+                    elem.appendChild(document.createTextNode(message));
+
+                    messagesDiv.insertBefore(elem, messagesDiv.firstChild);
+
+                });
+
+                lastMessage = messageLast;
+                console.log(lastMessage);
+
+            } else {
+                console.error('Failed to fetch messages:', await response.json());
+            }
+
+            isFetching = false; 
+        }
+
+        connectToChat();
+    </script>
+</body>
+</html>

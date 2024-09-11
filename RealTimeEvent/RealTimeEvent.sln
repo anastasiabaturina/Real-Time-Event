@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeEvent", "RealTimeEvent.csproj", "{A1D359EC-1594-49E9-B58B-377FDE1DE9DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1D359EC-1594-49E9-B58B-377FDE1DE9DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1D359EC-1594-49E9-B58B-377FDE1DE9DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1D359EC-1594-49E9-B58B-377FDE1DE9DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1D359EC-1594-49E9-B58B-377FDE1DE9DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {00D8B2C0-96E4-41CE-96D1-76BB54BC9130}
+	EndGlobalSection
+EndGlobal
