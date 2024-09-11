@@ -70,9 +70,9 @@
                 })
                 .build();
 
-            connection.on("Receive", (message, userName) => {
+            connection.on("ReceiveMessage", (userName, message) => {
                 addMessage(userName, message);
-            });
+            });;
 
             connection.on("Notify", (notification) => {
                 addNotification(notification);
@@ -92,7 +92,7 @@
                     const message = messageInput.value.trim();
 
                     if (message) {
-                        await connection.invoke("SendMessage", message);
+                        await sendMessage(message);
                         messageInput.value = '';
                     }
                 });
@@ -103,13 +103,12 @@
                         const message = messageInput.value.trim();
 
                         if (message) {
-                            await connection.invoke("SendMessage", message);
+                            await sendMessage(message);
                             messageInput.value = '';
                         }
                     }
                 });
-
-                
+              
                 const messagesDiv = document.getElementById('messages');
                 messagesDiv.addEventListener('scroll', async () => {
                     if (messagesDiv.scrollTop === 0 && !isFetching) {
@@ -118,6 +117,27 @@
                 });
             } catch (err) {
                 console.error('Connection error: ', err);
+            }
+        }
+
+        async function sendMessage(message) {
+            const token = localStorage.getItem('jwtToken');
+
+            const response = await fetch('http://localhost:5126/api/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                console.log('Message sent successfully.');
+            } else {
+                console.error('Failed to send message:', await response.json());
             }
         }
 
@@ -149,8 +169,8 @@
             isFetching = true;
             const token = localStorage.getItem('jwtToken');
             var url = lastMessage
-                ? `http://localhost:5126/api/v1/Auth/messages?lastmessage=${lastMessage}`
-                : `http://localhost:5126/api/v1/Auth/messages`;
+                ? `http://localhost:5126/api/v1/messages/?lastMessage=${lastMessage}`
+                : `http://localhost:5126/api/v1/messages`;
 
             const response = await fetch(url, {
                 method: 'GET',

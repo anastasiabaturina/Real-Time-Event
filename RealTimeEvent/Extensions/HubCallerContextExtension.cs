@@ -9,10 +9,4 @@ public static class HubCallerContextExtension
     {
         return context.User?.FindFirstValue(ClaimTypes.Name);
     }
-
-    public static Guid GetUserId(this HubCallerContext context)
-    {
-        var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userId != null ? Guid.Parse(userId) : Guid.Empty;
-    }
 }

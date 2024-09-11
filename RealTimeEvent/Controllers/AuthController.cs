@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models.DTOs;
 using RealTimeEvent.Models.Requests;
@@ -19,7 +18,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterUserRequest registerUserRequest, CancellationToken cancellationToken)
+    public async Task<ActionResult<Response<AuthResponse>>> Register(RegisterUserRequest registerUserRequest, CancellationToken cancellationToken)
     {
         var userDto = new RegisterUserDto
         {
@@ -38,7 +37,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest loginRequest, CancellationToken cancellationToken)
+    public async Task<ActionResult<Response<AuthResponse>>> Login(LoginRequest loginRequest, CancellationToken cancellationToken)
     {
         var userDto = new LoginUserDto
         {
@@ -51,25 +50,6 @@ public class AuthController : ControllerBase
         var response = new Response<AuthResponse>
         {
             Data = result,
-        };
-
-        return Ok(response);
-    }
-
-    [Authorize]
-    [HttpGet("messages")]
-    public async Task<IActionResult> GetMessage([FromQuery] DateTime? lastMessage, CancellationToken cancellationToken)
-    {
-        var getMesssgeDto = new GetMessageDto
-        {
-            LastMessage = lastMessage,
-        };
-
-        var result = await _userService.GetMessageAsync(getMesssgeDto, cancellationToken);
-
-        var response = new Response<GetMessageResponse>
-        {
-            Data = result
         };
 
         return Ok(response);

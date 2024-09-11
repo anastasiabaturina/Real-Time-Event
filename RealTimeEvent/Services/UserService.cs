@@ -7,6 +7,7 @@ using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models;
 using RealTimeEvent.Models.DTOs;
 using RealTimeEvent.Models.Responses;
+using SignalRApp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IOptions<JwtSettings> _jwt;
+
     public UserService(IUserRepository userRepository, IPasswordHasher<User> passwordHasher, IOptions<JwtSettings> jwt)
     {
         _userRepository = userRepository;
@@ -55,7 +57,7 @@ public class UserService : IUserService
 
     public async Task<AuthResponse> LoginAsync(LoginUserDto loginUserDto, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.FindUserNameAsync(loginUserDto.UserName, cancellationToken);
+        var user = await _userRepository.FindAsync(loginUserDto.UserName, cancellationToken);
 
         if (user == null)
         {
@@ -78,42 +80,7 @@ public class UserService : IUserService
         };
 
         return loginResponse;
-    }
-
-    public async Task SaveMessageAsync(MessageDto message)
-    {
-        var saveMessage = new Message
-        {
-            Text = message.Text,
-            UserId = message.UserId,
-            TimeSending = DateTime.UtcNow,
-            UserName = message.UserName
-        };
-
-        await _userRepository.SaveMesageAsync(saveMessage);
-    }
-
-    public async Task<GetMessageResponse> GetMessageAsync(GetMessageDto getMessageDto, CancellationToken cancellationToken)
-    {
-        var messages = await _userRepository.GetMessageAsync(getMessageDto.LastMessage, cancellationToken);
-
-        var lastMessage = messages.Last().TimeSending;
-
-        var messageResult = messages.Select(message => new GetMessageResult
-        {
-            UserName = message.UserName, 
-            Text = message.Text, 
-            TimeSending = message.TimeSending,
-        }).ToList();
-
-        var response = new GetMessageResponse
-        {
-            Result = messageResult,
-            LastMessage = lastMessage
-        };
-
-        return response;
-    }
+    }   
 
     private string GenerateToken(User user)
     {
