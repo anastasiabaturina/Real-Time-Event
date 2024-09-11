@@ -8,6 +8,7 @@ using RealTimeEvent.Models;
 using RealTimeEvent.Models.DTOs;
 using RealTimeEvent.Models.Responses;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Authentication;
 using System.Security.Claims;
 using System.Text;
 
@@ -36,7 +37,7 @@ public class UserService : IUserService
 
         if (userExist != null)
         {
-            throw new UserAlreadyExistsException();
+            throw new BadRequestException("User with this name already exists");
         }
 
         newUser.Password = _passwordHasher.HashPassword(newUser, registerUserDto.Password);
@@ -65,7 +66,7 @@ public class UserService : IUserService
 
         if (verificationResult != PasswordVerificationResult.Success)
         {
-            throw new ArgumentException("Invalid password");
+            throw new AuthenticationException("Invalid password");
         }
 
         var tokens = GenerateToken(user);

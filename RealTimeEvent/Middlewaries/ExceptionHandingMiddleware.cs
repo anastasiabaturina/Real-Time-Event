@@ -1,6 +1,7 @@
 ﻿using RealTimeEvent.Exceptions;
 using RealTimeEvent.Models.Responses;
 using System.Net;
+using System.Security.Authentication;
 
 namespace RealTimeEvent.Middlewaries;
 
@@ -24,9 +25,15 @@ public class ExceptionHandingMiddleware(RequestDelegate next)
             var errorMessage = ex.Message;
             await HandleExceptionAsync(context, code, errorMessage);
         }
-        catch (UserAlreadyExistsException)
+        catch (BadRequestException ex)
         {
             var code = HttpStatusCode.BadRequest;
+            var errorMessage = ex.Message;
+            await HandleExceptionAsync(context, code, errorMessage);
+        }
+        catch (AuthenticationException ex)
+        {
+            var code = HttpStatusCode.Unauthorized;
             var errorMessage = "User with this name already exists";
             await HandleExceptionAsync(context, code, errorMessage);
         }

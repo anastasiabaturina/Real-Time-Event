@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR;
 using RealTimeEvent.Extension;
 using RealTimeEvent.Interfaces;
 using RealTimeEvent.Models.DTOs;
-using System.Security.Claims;
 
 namespace SignalRApp;
 
@@ -19,13 +18,13 @@ public class ChatHub : Hub
 
     public async Task SendMessage(string message)
     {
-        var userName = Context.GetUserName;
+        var userName = Context.GetUserName();
         await Clients.All.SendAsync("Receive", message, userName);
 
         var saveMessageDto = new MessageDto
         {
             Text = message,
-            UserId = Guid.Parse(Context.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            UserId = Guid.Parse(Context.GetUserId().ToString()),
             UserName = userName.ToString(),
         };
 
@@ -34,13 +33,13 @@ public class ChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        await Clients.All.SendAsync("Notify", $"{Context.User.FindFirstValue(ClaimTypes.Name)} logged into the chat");
+        await Clients.All.SendAsync("Notify", $"{Context.GetUserName()} logged into the chat");
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await Clients.All.SendAsync("Notify", $"{Context.User.FindFirstValue(ClaimTypes.Name)} left the chat");
+        await Clients.All.SendAsync("Notify", $"{Context.GetUserName()} left the chat");
         await base.OnDisconnectedAsync(exception);
     }
 }
